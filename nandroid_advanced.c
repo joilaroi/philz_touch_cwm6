@@ -13,7 +13,7 @@
 /*****************************************/
 
 //these general variables are needed to not break backup and restore by external script
-int backup_boot = 1, backup_recovery = 1, backup_wimax = 1, backup_system = 1;
+int backup_boot = 1, backup_recovery = 1, backup_wimax = 1, backup_system = 1, backup_uboot = 1, backup_nvram = 1;
 int backup_data = 1, backup_cache = 1, backup_sdext = 1;
 int backup_preload = 0, backup_efs = 0, backup_misc = 0, backup_modem = 0, backup_radio = 0;
 int backup_data_media = 0;
@@ -165,6 +165,8 @@ int check_backup_size(const char* backup_path) {
     int Base_Partitions_Backup_Status[] = {
             backup_recovery,
             backup_boot,
+            backup_uboot,
+            backup_nvram,
             backup_wimax,
             backup_modem,
             backup_radio,
@@ -790,8 +792,14 @@ int twrp_backup(const char* backup_path) {
         return print_and_error(NULL, ret);
 
 #ifdef BOARD_USE_MTK_LAYOUT
-    if ((backup_boot || backup_recovery) && volume_for_path("/uboot") != NULL &&
+    if (backup_uboot && volume_for_path("/uboot") != NULL &&
             0 != (ret = nandroid_backup_partition(backup_path, "/uboot")))
+        return print_and_error(NULL, ret);
+#endif
+
+#ifdef BOARD_USE_MTK_LAYOUT
+    if (backup_nvram && volume_for_path("/nvram") != NULL &&
+            0 != (ret = nandroid_backup_partition(backup_path, "/nvram")))
         return print_and_error(NULL, ret);
 #endif
 
@@ -986,8 +994,14 @@ int twrp_restore(const char* backup_path) {
         return print_and_error(NULL, ret);
 
 #ifdef BOARD_USE_MTK_LAYOUT
-    if ((backup_boot || backup_recovery) && volume_for_path("/uboot") != NULL &&
+    if (backup_uboot && volume_for_path("/uboot") != NULL &&
             0 != (ret = nandroid_restore_partition(backup_path, "/uboot")))
+        return print_and_error(NULL, ret);
+#endif
+
+#ifdef BOARD_USE_MTK_LAYOUT
+    if (backup_nvram && volume_for_path("/nvram") != NULL &&
+            0 != (ret = nandroid_restore_partition(backup_path, "/nvram")))
         return print_and_error(NULL, ret);
 #endif
 

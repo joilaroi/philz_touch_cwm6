@@ -1026,7 +1026,7 @@ int ors_backup_command(const char* backup_path, const char* options) {
     is_custom_backup = 1;
     int old_enable_md5sum = enable_md5sum.value;
     enable_md5sum.value = 1;
-    backup_boot = 0, backup_recovery = 0, backup_wimax = 0, backup_system = 0;
+    backup_boot = 0, backup_recovery = 0, backup_uboot = 0, backup_nvram = 0, backup_wimax = 0, backup_system = 0;
     backup_preload = 0, backup_data = 0, backup_cache = 0, backup_sdext = 0;
     reset_extra_partitions_state();
     int extra_partitions_num = get_extra_partitions_state();
@@ -1058,7 +1058,13 @@ int ors_backup_command(const char* backup_path, const char* options) {
         } else if (value1[i] == 'R' || value1[i] == 'r') {
             backup_recovery = 1;
             ui_print("Recovery\n");
-        } else if (value1[i] == '1' || value1[i] == '2' || value1[i] == '3' || value1[i] == '4' || value1[i] == '5') {
+        } else if (value1[i] == 'U' || value1[i] == 'u') {
+            backup_uboot = 1;
+            ui_print("Uboot\n");
+        } else if (value1[i] == 'N' || value1[i] == 'n') {
+            backup_nvram = 1;
+            ui_print("Nvram\n");
+        } else if (value1[i] == '1' || value1[i] == '2' || value1[i] == '3' || value1[i] == '4' || value1[i] == '5' || value1[i] == '6' || value1[i] == '7') {
             // ascii to integer
             int val = value1[i] - 48;
             if (val <= extra_partitions_num) {
@@ -1229,7 +1235,7 @@ int run_ors_script(const char* ors_script) {
                 is_custom_backup = 1;
                 int old_enable_md5sum = enable_md5sum.value;
                 enable_md5sum.value = 1;
-                backup_boot = 0, backup_recovery = 0, backup_system = 0;
+                backup_boot = 0, backup_recovery = 0, backup_system = 0, backup_uboot = 0, backup_nvram = 0;
                 backup_preload = 0, backup_data = 0, backup_cache = 0, backup_sdext = 0;
                 reset_extra_partitions_state();
                 int extra_partitions_num = get_extra_partitions_state();
@@ -1264,7 +1270,13 @@ int run_ors_script(const char* ors_script) {
                         } else if (value2[i] == 'R' || value2[i] == 'r') {
                             backup_recovery = 1;
                             ui_print("Recovery\n");
-                        } else if (value2[i] == '1' || value2[i] == '2' || value2[i] == '3' || value2[i] == '4' || value2[i] == '5') {
+                        } else if (value2[i] == 'U' || value2[i] == 'u') {
+                            backup_uboot = 1;
+                            ui_print("Uboot\n");
+                        } else if (value2[i] == 'N' || value2[i] == 'n') {
+                            backup_nvram = 1;
+                            ui_print("Nvram\n");
+                        } else if (value2[i] == '1' || value2[i] == '2' || value2[i] == '3' || value2[i] == '4' || value2[i] == '5' || value2[i] == '6' || value2[i] == '7') {
                             // ascii to integer
                             int val = value2[i] - 48;
                             if (val <= extra_partitions_num) {
@@ -2091,6 +2103,7 @@ int show_custom_zip_menu() {
 
         if (confirm) {
             // warning: this will fail if the file is in a non mountable path like /etc, /res, root path...
+            set_ensure_mount_always_true(1);
             install_zip(files[chosen_item - numDirs - 1]);
         }
     }
@@ -2199,13 +2212,13 @@ int set_android_secure_path(char *and_sec_path) {
 void reset_custom_job_settings(int custom_job) {
     // check if we are setting defaults for custom jobs
     if (custom_job) {
-        backup_boot = 1, backup_recovery = 1, backup_system = 1;
+        backup_boot = 1, backup_recovery = 1, backup_system = 1, backup_uboot = 0, backup_nvram = 0;
         backup_data = 1, backup_cache = 1;
         backup_wimax = 0;
         backup_sdext = 0;
     } else {
         // we are exiting backup jobs, revert to default CWM so that stock Backup / Restore behaves as expected
-        backup_boot = 1, backup_recovery = 1, backup_system = 1;
+        backup_boot = 1, backup_recovery = 1, backup_system = 1, backup_uboot = 1, backup_nvram = 1;
         backup_data = 1, backup_cache = 1;
         backup_wimax = 1;
         backup_sdext = 1;
@@ -2235,6 +2248,10 @@ static void ui_print_backup_list() {
         ui_print(" - boot");
     if (backup_recovery)
         ui_print(" - recovery");
+    if (backup_uboot)
+        ui_print(" - uboot");
+    if (backup_nvram)
+        ui_print(" - nvram");
     if (backup_system)
         ui_print(" - system");
     if (backup_preload)
@@ -2461,7 +2478,7 @@ static void custom_restore_handler(const char* backup_volume, const char* backup
     - else, we only accept them separately for custom backup jobs    
 */
 static void validate_backup_job(const char* backup_volume, int is_backup) {
-    int sum = backup_boot + backup_recovery + backup_system + backup_preload + backup_data +
+    int sum = backup_boot + backup_recovery + backup_uboot + backup_nvram + backup_system + backup_preload + backup_data +
                 backup_cache + backup_sdext + backup_wimax + backup_misc + backup_data_media;
 
     // add extra partitions to the sum
@@ -2527,6 +2544,8 @@ enum {
   LIST_ITEM_REBOOT,
   LIST_ITEM_BOOT,
   LIST_ITEM_RECOVERY,
+  LIST_ITEM_UBOOT,
+  LIST_ITEM_NVRAM,
   LIST_ITEM_SYSTEM,
   LIST_ITEM_PRELOAD,
   LIST_ITEM_DATA,
@@ -2589,6 +2608,22 @@ void custom_restore_menu(const char* backup_volume) {
             list[LIST_ITEM_RECOVERY] = strdup(menu_item_tmp);
         } else {
             list[LIST_ITEM_RECOVERY] = NULL;
+        }
+
+        if (volume_for_path("/uboot") != NULL) {
+            if (backup_uboot) ui_format_gui_menu(menu_item_tmp, "Restore uboot", "(x)");
+            else ui_format_gui_menu(menu_item_tmp, "Restore uboot", "( )");
+            list[LIST_ITEM_UBOOT] = strdup(menu_item_tmp);
+        } else {
+            list[LIST_ITEM_UBOOT] = NULL;
+        }
+
+        if (volume_for_path("/nvram") != NULL) {
+            if (backup_nvram) ui_format_gui_menu(menu_item_tmp, "Restore nvram", "(x)");
+            else ui_format_gui_menu(menu_item_tmp, "Restore nvram", "( )");
+            list[LIST_ITEM_NVRAM] = strdup(menu_item_tmp);
+        } else {
+            list[LIST_ITEM_NVRAM] = NULL;
         }
 
         if (backup_system) ui_format_gui_menu(menu_item_tmp, "Restore system", "(x)");
@@ -2712,6 +2747,12 @@ void custom_restore_menu(const char* backup_volume) {
             case LIST_ITEM_RECOVERY:
                 backup_recovery ^= 1;
                 break;
+            case LIST_ITEM_UBOOT:
+                backup_uboot ^= 1;
+                break;
+            case LIST_ITEM_NVRAM:
+                backup_nvram ^= 1;
+                break;
             case LIST_ITEM_SYSTEM:
                 backup_system ^= 1;
                 break;
@@ -2829,6 +2870,22 @@ void custom_backup_menu(const char* backup_volume)
             list[LIST_ITEM_RECOVERY] = strdup(menu_item_tmp);
         } else {
             list[LIST_ITEM_RECOVERY] = NULL;
+        }
+
+        if (volume_for_path("/uboot") != NULL) {
+            if (backup_uboot) ui_format_gui_menu(menu_item_tmp, "Backup uboot", "(x)");
+            else ui_format_gui_menu(menu_item_tmp, "Backup uboot", "( )");
+            list[LIST_ITEM_UBOOT] = strdup(menu_item_tmp);
+        } else {
+            list[LIST_ITEM_UBOOT] = NULL;
+        }
+
+        if (volume_for_path("/nvram") != NULL) {
+            if (backup_nvram) ui_format_gui_menu(menu_item_tmp, "Backup nvram", "(x)");
+            else ui_format_gui_menu(menu_item_tmp, "Backup nvram", "( )");
+            list[LIST_ITEM_NVRAM] = strdup(menu_item_tmp);
+        } else {
+            list[LIST_ITEM_NVRAM] = NULL;
         }
 
         if (backup_system) ui_format_gui_menu(menu_item_tmp, "Backup system", "(x)");
@@ -2951,6 +3008,12 @@ void custom_backup_menu(const char* backup_volume)
                 break;
             case LIST_ITEM_RECOVERY:
                 backup_recovery ^= 1;
+                break;
+            case LIST_ITEM_UBOOT:
+                backup_uboot ^= 1;
+                break;
+            case LIST_ITEM_NVRAM:
+                backup_nvram ^= 1;
                 break;
             case LIST_ITEM_SYSTEM:
                 backup_system ^= 1;

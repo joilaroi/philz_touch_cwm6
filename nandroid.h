@@ -70,6 +70,8 @@ extern int backup_boot;
 extern int backup_recovery;
 extern int backup_system;
 extern int backup_preload;
+extern int backup_uboot;
+extern int backup_nvram;
 extern int backup_data;
 extern int backup_cache;
 extern int backup_sdext;

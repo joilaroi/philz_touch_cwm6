@@ -2650,11 +2650,11 @@ static int make_update_zip(const char* source_path, const char* target_volume) {
 
     if (source_path == NULL) {
         // create a nandroid backup from existing ROM and use it for update.zip
-        backup_recovery = 0, backup_wimax = 0, backup_data = 0, backup_cache = 0, backup_sdext = 0;
+        backup_recovery = 0, backup_uboot = 0, backup_uboot = 0, backup_wimax = 0, backup_data = 0, backup_cache = 0, backup_sdext = 0;
         nandroid_force_backup_format("tar");
         ret = nandroid_backup(tmp_path);
         nandroid_force_backup_format("");
-        backup_recovery = 1, backup_wimax = 1, backup_data = 1, backup_cache = 1, backup_sdext = 1;
+        backup_recovery = 1, backup_uboot = 1, backup_nvram = 1, backup_wimax = 1, backup_data = 1, backup_cache = 1, backup_sdext = 1;
         if (ret != 0) {
             LOGE("Error while creating a nandroid image!\n");
             return ret;

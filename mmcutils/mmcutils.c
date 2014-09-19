@@ -628,6 +628,7 @@ int cmd_mmc_backup_raw_partition(const char *partition, const char *filename)
 
 #ifdef BOARD_USE_MTK_LAYOUT
         // adapted from https://github.com/PhilZ-cwm6/mtk6589_bootable_recovery
+        // adapted for mtk6582
         // take boot and recovery partition sizes into account
         if (strstr(partition, BOOT_PARTITION_MOUNT_POINT) != NULL) {
             if (Find_Partition_Size(BOOT_PARTITION_MOUNT_POINT) != 0)
@@ -648,6 +649,12 @@ int cmd_mmc_backup_raw_partition(const char *partition, const char *filename)
                 return -1;
             sz = (unsigned)Total_Size;
             printf("mtk uboot: %s (%u)\n", partition, sz);
+        }
+        if (strstr(partition, "/nvram") != NULL) {
+            if (Find_Partition_Size("/nvram") != 0)
+                return -1;
+            sz = (unsigned)Total_Size;
+            printf("mtk nvram: %s (%u)\n", partition, sz);
         }
 #endif
 
