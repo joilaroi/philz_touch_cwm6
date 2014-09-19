@@ -2103,7 +2103,6 @@ int show_custom_zip_menu() {
 
         if (confirm) {
             // warning: this will fail if the file is in a non mountable path like /etc, /res, root path...
-            set_ensure_mount_always_true(1);
             install_zip(files[chosen_item - numDirs - 1]);
         }
     }
