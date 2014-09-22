@@ -115,7 +115,7 @@ static int Is_Image(const char* root) {
 - Update_Size() will get size details with Get_Size_Via_statfs() or if it fails with Get_Size_Via_df()
 - So, only not mountable partitions are using Find_Partition_Size()
 */
-#define BASE_PARTITIONS_NUM   13
+#define BASE_PARTITIONS_NUM   15
 unsigned long long Backup_Size = 0;
 unsigned long long Before_Used_Size = 0;
 int check_backup_size(const char* backup_path) {
@@ -131,6 +131,8 @@ int check_backup_size(const char* backup_path) {
     char* Base_Partitions_List[BASE_PARTITIONS_NUM] = {
             "/recovery",
             BOOT_PARTITION_MOUNT_POINT,
+            "/uboot",
+            "/nvram",
             "/wimax",
             "/modem",
             "/radio",
@@ -795,9 +797,7 @@ int twrp_backup(const char* backup_path) {
     if (backup_uboot && volume_for_path("/uboot") != NULL &&
             0 != (ret = nandroid_backup_partition(backup_path, "/uboot")))
         return print_and_error(NULL, ret);
-#endif
 
-#ifdef BOARD_USE_MTK_LAYOUT
     if (backup_nvram && volume_for_path("/nvram") != NULL &&
             0 != (ret = nandroid_backup_partition(backup_path, "/nvram")))
         return print_and_error(NULL, ret);
@@ -997,9 +997,7 @@ int twrp_restore(const char* backup_path) {
     if (backup_uboot && volume_for_path("/uboot") != NULL &&
             0 != (ret = nandroid_restore_partition(backup_path, "/uboot")))
         return print_and_error(NULL, ret);
-#endif
 
-#ifdef BOARD_USE_MTK_LAYOUT
     if (backup_nvram && volume_for_path("/nvram") != NULL &&
             0 != (ret = nandroid_restore_partition(backup_path, "/nvram")))
         return print_and_error(NULL, ret);

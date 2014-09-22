@@ -2217,7 +2217,7 @@ void reset_custom_job_settings(int custom_job) {
         backup_sdext = 0;
     } else {
         // we are exiting backup jobs, revert to default CWM so that stock Backup / Restore behaves as expected
-        backup_boot = 1, backup_recovery = 1, backup_system = 1, backup_uboot = 1, backup_nvram = 1;
+        backup_boot = 1, backup_recovery = 1, backup_system = 1, backup_uboot = 0, backup_nvram = 0;
         backup_data = 1, backup_cache = 1;
         backup_wimax = 1;
         backup_sdext = 1;
@@ -2441,6 +2441,7 @@ static void custom_restore_handler(const char* backup_volume, const char* backup
                 dd_raw_restore_handler(file, "/radio");
         } else
             LOGE("no /radio partition to flash\n");
+
     } else {
         // process restore job
         file = choose_file_menu(backup_path, "", headers);

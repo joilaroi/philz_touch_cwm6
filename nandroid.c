@@ -564,9 +564,7 @@ int nandroid_backup(const char* backup_path) {
     if (backup_uboot && volume_for_path("/uboot") != NULL &&
             0 != (ret = nandroid_backup_partition(backup_path, "/uboot")))
         return print_and_error(NULL, ret);
-#endif
 
-#ifdef BOARD_USE_MTK_LAYOUT
     if (backup_nvram && volume_for_path("/nvram") != NULL &&
             0 != (ret = nandroid_backup_partition(backup_path, "/nvram")))
         return print_and_error(NULL, ret);
@@ -1145,8 +1143,7 @@ int nandroid_restore(const char* backup_path, int restore_boot, int restore_syst
     	if (backup_uboot && volume_for_path("/uboot") != NULL && 0 != (ret = nandroid_restore_partition(backup_path, "/uboot")))
         	return print_and_error(NULL, ret);
     }
-#endif
-#ifdef BOARD_USE_MTK_LAYOUT
+
     if (is_custom_backup) {
     	if (backup_nvram && volume_for_path("/nvram") != NULL && 0 != (ret = nandroid_restore_partition(backup_path, "/nvram")))
         	return print_and_error(NULL, ret);
