@@ -2441,7 +2441,6 @@ static void custom_restore_handler(const char* backup_volume, const char* backup
                 dd_raw_restore_handler(file, "/radio");
         } else
             LOGE("no /radio partition to flash\n");
-
     } else {
         // process restore job
         file = choose_file_menu(backup_path, "", headers);
